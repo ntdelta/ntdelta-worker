@@ -1,0 +1,102 @@
+import generic.stl.Pair;
+import ghidra.app.decompiler.DecompInterface;
+import ghidra.app.decompiler.DecompileException;
+import ghidra.app.decompiler.DecompileOptions;
+import ghidra.app.decompiler.DecompileResults;
+import ghidra.app.decompiler.DecompiledFunction;
+import ghidra.app.script.GhidraScript;
+import ghidra.program.model.address.Address;
+import ghidra.program.model.listing.Function;
+import ghidra.program.model.listing.FunctionIterator;
+import ghidra.program.model.listing.FunctionManager;
+import ghidra.program.model.mem.MemoryAccessException;
+import ghidra.program.model.pcode.HighFunction;
+import ghidra.program.model.pcode.HighParam;
+import ghidra.program.model.pcode.HighVariable;
+import ghidra.program.model.pcode.PcodeOp;
+import ghidra.program.model.pcode.PcodeOpAST;
+import ghidra.program.model.pcode.Varnode;
+import ghidra.util.Msg;
+import ghidra.util.exception.NotYetImplementedException;
+import ghidra.util.task.TaskMonitor;
+import ghidra.util.task.ConsoleTaskMonitor;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
+import java.util.HashMap; // import the HashMap class
+import java.util.Arrays;
+import java.util.Iterator;
+import java.io.BufferedWriter;
+import java.io.FileWriter;
+import java.io.IOException;
+
+public class DumpFunctions extends GhidraScript {
+
+    @Override
+    protected void run() throws Exception {
+
+        if (currentProgram == null) {
+            Msg.showError(this,
+                          null,
+                          "Error",
+                          "This script should be run from a tool with open program."
+            );
+            return;
+        }
+		HashMap<String, String> dictionary = new HashMap<>();
+        FunctionManager functionManager = currentProgram.getFunctionManager();
+        FunctionIterator functionIterator = functionManager.getFunctions(true);
+        DecompileOptions options = new DecompileOptions();
+        DecompInterface ifc = new DecompInterface();
+        ifc.setOptions(options);
+        ifc.setSimplificationStyle("decompile");
+
+        if (!ifc.openProgram(currentProgram)) {
+            throw new DecompileException("Decompiler",
+                                         "Unable to initialize: " + ifc.getLastMessage()
+            );
+        }
+
+        Function currentFunction = functionManager.getFunctionContaining(currentAddress);
+//        printFunction(ifc, currentFunction, monitor);
+//        processFunction(ifc, currentFunction, monitor);
+
+        while (functionIterator.hasNext()) {
+            Function function = functionIterator.next();
+                String decompiledFunction = processFunction(ifc, function, monitor);
+				dictionary.put(function.getName(), decompiledFunction);
+				printf("%s\n", decompiledFunction);
+                if (monitor.isCancelled()) {
+                    return;
+                }
+        }
+    }
+
+    private String processFunction(DecompInterface ifc, Function function, TaskMonitor monitor) throws IOException {
+       printf("processing %s : %s\n", function.getName(), function.getEntryPoint());
+       DecompileResults results = ifc.decompileFunction(function, 0, new ConsoleTaskMonitor());
+
+       Pattern pattern = Pattern.compile("[^\\\\/:*?\"<>|]+");
+       Matcher matcher = pattern.matcher(function.getName());
+       String fileName = function.getName(); 
+       if (matcher.find()) {
+            fileName = matcher.group();
+       }
+
+        String decomp = "Could not decompile function. This is an issue with Ghidra and usually relates to 'Low-level Error: Overriding symbol with different type size'";
+        BufferedWriter writer = new BufferedWriter(new FileWriter("{{ blob }}_" + fileName +".txt"));
+        DecompiledFunction decompiledFunction = results.getDecompiledFunction();
+        
+        if (decompiledFunction != null) {
+            String c = decompiledFunction.getC();
+            if (c != null) {
+                writer.write(c);
+                decomp = c;
+            }
+        }
+ 
+        // Close the writer.
+        writer.close();
+       return decomp;
+    }
+}
