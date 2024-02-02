@@ -78,7 +78,7 @@ public class DumpFunctions extends GhidraScript {
 
        Pattern pattern = Pattern.compile("[^\\\\/:*?\"<>|]+");
        Matcher matcher = pattern.matcher(function.getName());
-       String fileName = function.getName(); 
+       String fileName = function.getName();
        if (matcher.find()) {
             fileName = matcher.group();
        }
@@ -86,7 +86,7 @@ public class DumpFunctions extends GhidraScript {
         String decomp = "Could not decompile function. This is an issue with Ghidra and usually relates to 'Low-level Error: Overriding symbol with different type size'";
         BufferedWriter writer = new BufferedWriter(new FileWriter("{{ blob }}_" + fileName +".txt"));
         DecompiledFunction decompiledFunction = results.getDecompiledFunction();
-        
+
         if (decompiledFunction != null) {
             String c = decompiledFunction.getC();
             if (c != null) {
@@ -94,7 +94,7 @@ public class DumpFunctions extends GhidraScript {
                 decomp = c;
             }
         }
- 
+
         // Close the writer.
         writer.close();
        return decomp;

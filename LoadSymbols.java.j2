@@ -1,0 +1,41 @@
+import generic.stl.Pair;
+import ghidra.app.plugin.core.analysis.PdbUniversalAnalyzer;
+import ghidra.app.decompiler.DecompInterface;
+import ghidra.app.decompiler.DecompileException;
+import ghidra.app.decompiler.DecompileOptions;
+import ghidra.app.decompiler.DecompileResults;
+import ghidra.app.decompiler.DecompiledFunction;
+import ghidra.app.script.GhidraScript;
+import ghidra.program.model.address.Address;
+import ghidra.program.model.listing.Function;
+import ghidra.program.model.listing.FunctionIterator;
+import ghidra.program.model.listing.FunctionManager;
+import ghidra.program.model.mem.MemoryAccessException;
+import ghidra.program.model.pcode.HighFunction;
+import ghidra.program.model.pcode.HighParam;
+import ghidra.program.model.pcode.HighVariable;
+import ghidra.program.model.pcode.PcodeOp;
+import ghidra.program.model.pcode.PcodeOpAST;
+import ghidra.program.model.pcode.Varnode;
+import ghidra.util.Msg;
+import ghidra.util.exception.NotYetImplementedException;
+import ghidra.util.task.TaskMonitor;
+import ghidra.util.task.ConsoleTaskMonitor;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
+import java.util.HashMap; // import the HashMap class
+import java.util.Arrays;
+import java.util.Iterator;
+import java.io.BufferedWriter;
+import java.io.FileWriter;
+import java.io.File;
+import java.io.IOException;
+
+public class LoadSymbols extends GhidraScript {
+
+    @Override
+    protected void run() throws Exception {
+        PdbUniversalAnalyzer.setPdbFileOption(currentProgram, new File("{{ blob }}"));
+    }
+}
